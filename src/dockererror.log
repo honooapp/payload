@@ -1,0 +1,211 @@
+marcoautiero@Vercingio opera_webapp % docker compose up --build -d
+WARN[0002] commandConn.CloseWrite: commandconn: failed to wait: signal: killed 
+Sending build context to Docker daemon     560B
+Step 1/6 : FROM jonasal/nginx-certbot
+ ---> b1540f3eb2f9
+Step 2/6 : RUN rm /etc/nginx/conf.d/*
+ ---> Using cache
+ ---> 321dfa01dfcd
+Step 3/6 : COPY ./conf/default.conf /etc/nginx/conf.d/
+ ---> Using cache
+ ---> 5be487c9e6a2
+Step 4/6 : EXPOSE 80
+ ---> Using cache
+ ---> 614d6326ed51
+Step 5/6 : EXPOSE 443
+ ---> Using cache
+ ---> 2930ee212176
+Step 6/6 : CMD ["nginx", "-g", "daemon off;"]
+ ---> Using cache
+ ---> d5e101a0d723
+Successfully built d5e101a0d723
+Successfully tagged opera_webapp_nginx:latest
+Sending build context to Docker daemon  99.92MB
+Step 1/22 : FROM node:18-alpine as base
+ ---> 6f44d13dd258
+Step 2/22 : FROM base as builder
+ ---> 6f44d13dd258
+Step 3/22 : WORKDIR /home/node
+ ---> Using cache
+ ---> e8aa42d5842a
+Step 4/22 : COPY package*.json ./
+ ---> Using cache
+ ---> 0a65ba334ef4
+Step 5/22 : COPY . .
+ ---> 4e9fcafd5322
+Step 6/22 : RUN yarn install
+ ---> Running in 82a169c7dfb5
+yarn install v1.22.19
+[1/4] Resolving packages...
+[2/4] Fetching packages...
+[3/4] Linking dependencies...
+warning "payload > @monaco-editor/react@4.4.6" has unmet peer dependency "monaco-editor@>= 0.25.0 < 1".
+warning "payload > express-graphql@0.12.0" has incorrect peer dependency "graphql@^14.7.0 || ^15.3.0".
+warning "payload > react-diff-viewer@3.1.1" has incorrect peer dependency "react@^15.3.0 || ^16.0.0".
+warning "payload > react-diff-viewer@3.1.1" has incorrect peer dependency "react-dom@^15.3.0 || ^16.0.0".
+warning "payload > react-select@3.2.0" has incorrect peer dependency "react@^16.8.0 || ^17.0.0".
+warning "payload > react-select@3.2.0" has incorrect peer dependency "react-dom@^16.8.0 || ^17.0.0".
+warning "payload > use-context-selector@1.4.1" has unmet peer dependency "scheduler@>=0.19.0".
+warning "payload > @monaco-editor/react > @monaco-editor/loader@1.3.2" has unmet peer dependency "monaco-editor@>= 0.21.0 < 1".
+warning "payload > react-select > react-input-autosize@3.0.0" has incorrect peer dependency "react@^16.3.0 || ^17.0.0".
+[4/4] Building fresh packages...
+success Saved lockfile.
+Done in 52.96s.
+Removing intermediate container 82a169c7dfb5
+ ---> cb7e2ef81fb5
+Step 7/22 : RUN yarn build
+ ---> Running in 79f23d8bb2cc
+yarn run v1.22.19
+$ yarn copyfiles && yarn build:payload && yarn build:server
+$ copyfiles -u 1 "src/**/*.{html,css,scss,ttf,woff,woff2,eot,svg,jpg,png}" dist/
+$ cross-env PAYLOAD_CONFIG_PATH=src/payload.config.ts payload build
+$ tsc
+Done in 48.90s.
+Removing intermediate container 79f23d8bb2cc
+ ---> ac329b0b5d41
+Step 8/22 : FROM base as runtime
+ ---> 6f44d13dd258
+Step 9/22 : ENV NODE_ENV=production
+ ---> Using cache
+ ---> ad8c0fbb0e25
+Step 10/22 : ENV PAYLOAD_SECRET=8bdd4966772390d05923c2a9
+ ---> Using cache
+ ---> 51b1247d2111
+Step 11/22 : ENV PAYLOAD_CONFIG_PATH=dist/payload.config.js
+ ---> Using cache
+ ---> ea39c235820e
+Step 12/22 : ENV MONGODB_URI=mongodb+srv://doadmin:3n7f2058Avc64ewV@aretamap-mongo-4d960af0.mongo.ondigitalocean.com/aretamap?tls=true&authSource=admin&replicaSet=aretamap-mongo
+ ---> Using cache
+ ---> 3ef642e90fe8
+Step 13/22 : ENV SERVER_URL=http://164.90.236.172
+ ---> Using cache
+ ---> eb07791927c6
+Step 14/22 : RUN echo "nameserver 8.8.8.8" > /etc/resolv.conf
+ ---> Using cache
+ ---> e495f33c243f
+Step 15/22 : RUN echo "nameserver 4.4.4.4" > /etc/resolv.conf
+ ---> Using cache
+ ---> 0f8de48001e2
+Step 16/22 : WORKDIR /home/node
+ ---> Using cache
+ ---> fd086e7116ac
+Step 17/22 : COPY package*.json  ./
+ ---> Using cache
+ ---> 018357caf039
+Step 18/22 : RUN yarn install --production
+ ---> Using cache
+ ---> 052b9c6970a8
+Step 19/22 : COPY --from=builder /home/node/dist ./dist
+ ---> 576d74bb3a5e
+Step 20/22 : COPY --from=builder /home/node/build ./build
+ ---> 3998335ecc8f
+Step 21/22 : EXPOSE 3000
+ ---> Running in 7dd56d6add51
+Removing intermediate container 7dd56d6add51
+ ---> 563f7780a1aa
+Step 22/22 : CMD ["node", "dist/server.js"]
+ ---> Running in 26a9b999ed55
+Removing intermediate container 26a9b999ed55
+ ---> 67db937b42e9
+Successfully built 67db937b42e9
+Successfully tagged opera_webapp_payload:latest
+Sending build context to Docker daemon  110.1MB
+Step 1/23 : FROM node:18-alpine AS base
+ ---> 6f44d13dd258
+Step 2/23 : FROM base AS deps
+ ---> 6f44d13dd258
+Step 3/23 : RUN apk add --no-cache libc6-compat
+ ---> Using cache
+ ---> ad7285773f4f
+Step 4/23 : WORKDIR /app
+ ---> Using cache
+ ---> 8f6caf1030b5
+Step 5/23 : COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* ./
+ ---> Using cache
+ ---> 8447e5e99f75
+Step 6/23 : RUN   if [ -f yarn.lock ]; then yarn --frozen-lockfile;   elif [ -f package-lock.json ]; then npm ci;   elif [ -f pnpm-lock.yaml ]; then yarn global add pnpm && pnpm i --frozen-lockfile;   else echo "Lockfile not found." && exit 1;   fi
+ ---> Using cache
+ ---> 1e212281f44e
+Step 7/23 : FROM base AS builder
+ ---> 6f44d13dd258
+Step 8/23 : WORKDIR /app
+ ---> Using cache
+ ---> 87f5a529969b
+Step 9/23 : COPY --from=deps /app/node_modules ./node_modules
+ ---> Using cache
+ ---> f9c5717da527
+Step 10/23 : COPY . .
+ ---> Using cache
+ ---> 2f466a709972
+Step 11/23 : RUN yarn build
+ ---> Running in e01fc9004b09
+yarn run v1.22.19
+$ next build
+info  - Loaded env from /app/.env.production
+info  - Loaded env from /app/.env
+warn  - You have enabled experimental feature (appDir) in next.config.js.
+warn  - Experimental features are not covered by semver, and may cause unexpected or broken application behavior. Use at your own risk.
+info  - Thank you for testing `appDir` please leave your feedback at https://nextjs.link/app-feedback
+
+Attention: Next.js now collects completely anonymous telemetry regarding usage.
+This information is used to shape Next.js' roadmap and prioritize features.
+You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+https://nextjs.org/telemetry
+
+info  - Creating an optimized production build...
+info  - Compiled successfully
+info  - Linting and checking validity of types...
+Pages directory cannot be found at /app/pages or /app/src/pages. If using a custom path, please configure with the `no-html-link-for-pages` rule in your eslint config file.
+
+./components/auth/index.jsx
+31:8  Warning: React Hook useCallback has a missing dependency: 'cms_url'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+72:8  Warning: React Hook useEffect has a missing dependency: 'cms_url'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/basic-features/eslint#disabling-rules
+info  - Collecting page data...
+info  - Generating static pages (0/6)
+info  - Generating static pages (1/6)
+info  - Generating static pages (2/6)
+info  - Generating static pages (4/6)
+TypeError: fetch failed
+    at Object.fetch (node:internal/deps/undici/undici:11457:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async getPlaces (/app/.next/server/app/nav/page.js:357:17)
+    at async Page (/app/.next/server/app/nav/page.js:368:20) {
+  cause: Error: getaddrinfo EAI_AGAIN payload
+      at GetAddrInfoReqWrap.onlookup [as oncomplete] (node:dns:107:26)
+      at GetAddrInfoReqWrap.callbackTrampoline (node:internal/async_hooks:130:17) {
+    errno: -3001,
+    code: 'EAI_AGAIN',
+    syscall: 'getaddrinfo',
+    hostname: 'payload'
+  }
+}
+[Error: An error occurred in the Server Components render. The specific message is omitted in production builds to avoid leaking sensitive details. A digest property is included on this error instance which may provide additional details about the nature of the error.] {
+  digest: '2281814707'
+}
+
+Error occurred prerendering page "/nav". Read more: https://nextjs.org/docs/messages/prerender-error
+TypeError: fetch failed
+    at Object.fetch (node:internal/deps/undici/undici:11457:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async getPlaces (/app/.next/server/app/nav/page.js:357:17)
+    at async Page (/app/.next/server/app/nav/page.js:368:20)
+info  - Generating static pages (6/6)
+
+> Build error occurred
+Error: Export encountered errors on following paths:
+        /nav/page: /nav
+    at /app/node_modules/next/dist/export/index.js:409:19
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async Span.traceAsyncFn (/app/node_modules/next/dist/trace/trace.js:79:20)
+    at async /app/node_modules/next/dist/build/index.js:1398:21
+    at async Span.traceAsyncFn (/app/node_modules/next/dist/trace/trace.js:79:20)
+    at async /app/node_modules/next/dist/build/index.js:1258:17
+    at async Span.traceAsyncFn (/app/node_modules/next/dist/trace/trace.js:79:20)
+    at async Object.build [as default] (/app/node_modules/next/dist/build/index.js:66:29)
+error Command failed with exit code 1.
+info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command.
+1 error occurred:
+        * Status: The command '/bin/sh -c yarn build' returned a non-zero code: 1, Code: 1
+
